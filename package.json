@@ -1,0 +1,17 @@
+{
+  "name": "marina-load-manager",
+  "version": "1.0.0",
+  "description": "A demo api modeling boat load management with a gcloud datastore backend",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Jacob Anderson",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/datastore": "^6.2.0",
+    "express": "^4.17.1",
+    "fs": "0.0.1-security"
+  }
+}
