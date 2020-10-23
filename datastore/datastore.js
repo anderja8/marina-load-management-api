@@ -2,17 +2,15 @@ const {Datastore} = require('@google-cloud/datastore');
 const config = require('../config.js')
 const projectId = config.GCLOUD_PROJECT;
 const datastore = new Datastore({projectId:projectId});
-const {datastore, fromDatastore} = require('./datastore.js');
-
 
 class GCloudDatastore {
     constructor() {
         this.datastore = datastore;
-        this.fromDatastore = fromDatastore;
     }
 
     //Adds the datastore id to the passed object and then returns the updated object
     fromDatastore(item) {
+        console
         item.id = item[Datastore.KEY].id;
         return item;
     }
@@ -21,7 +19,8 @@ class GCloudDatastore {
     saveDoc(document, datastoreKey) {
         const key = this.datastore.key(datastoreKey);
         return this.datastore.save({"key":key, "data":document}).then(() => {
-            return this.fromDatastore(document);
+            document.id = key.id;
+            return document;
         });
     }
 
@@ -59,7 +58,8 @@ class GCloudDatastore {
     
             const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
             return this.datastore.save({"key":key, "data":newDoc}).then(() => {
-                return this.fromDatastore(doc);
+                newDoc.id = docID;
+                return newDoc;
             });
         });
     }

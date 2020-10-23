@@ -1,19 +1,15 @@
-// Was able to setup functionally datastore emulator!
-// To connect to it instead of datastore when local, run $(gcloud beta emulators datastore env-init)
 const {BoatHandlers} = require('./handlers/boat.js');
 const boatHandlers = new BoatHandlers();
-const {SlipHandlers} = require('./handlers/slip.js');
-const slipHandlers = new SlipHandlers();
 
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const slip = require('./datastore/slip.js');
-
 const router = express.Router();
 
 app.use(bodyParser.json());
 app.set('port', 8080);
+
+ROOT_URL = 'anderja8-marina-load-manager.appspot.com';
 
 //Basic documentation, not required but I think it adds a lot
 router.get('/', function(req, res) {
