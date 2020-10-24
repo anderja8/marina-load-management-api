@@ -37,23 +37,17 @@ class BoatHandlers {
 
     getBoats(req, res) {
         gCloudDatastore.getDocsWithPagination(BOAT_DATASTORE_KEY, 3, req.query.endCursor).then((data) => {
-            const boats = data[0];
+            let boats = data[0].map(function(boat) { return generateSelf(boat, '/boats/' + boat.id) });
             const pageInfo = data[1];
 
             let retJSON = {
-                "boats": boats,
-                "info": {
-                    "moreResults": false,
-                    "nextPage": null
-                }
+                "boats": boats
             }
 
             if (pageInfo.moreResults === true) {
-                retJSON.info.moreResults = true;
-                retJSON.info.nextPage = ROOT_URL + '/boats?endCursor=' + pageInfo.endCursor;
+                retJSON.next = ROOT_URL + '/boats?endCursor=' + pageInfo.endCursor;
             }
 
-            console.log(retJSON);
             return res.status(200).json(retJSON);
         })
     }

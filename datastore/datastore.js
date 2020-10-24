@@ -55,11 +55,8 @@ class GCloudDatastore {
             q = q.start(pageCursor);
         }
         const results = await datastore.runQuery(q);
-        const entities = results[0];
+        const entities = results[0].map(this.fromDatastore);
         const info = results[1];
-
-        console.log(info);
-        console.log("no more results is: " + Datastore.NO_MORE_RESULTS);
     
         //There is glitch the datastore emulator where moreResults will never return
         //NO_MORE_RESULTS. Adding a length check as a pseudo-work around for local testing

@@ -1,5 +1,7 @@
 const {BoatHandlers} = require('./handlers/boat.js');
 const boatHandlers = new BoatHandlers();
+const {LoadHandlers} = require('./handlers/load.js');
+const loadHandlers = new LoadHandlers();
 
 const express = require('express');
 const app = express();
@@ -24,6 +26,12 @@ router.post('/boats', boatHandlers.postBoat);
 router.get('/boats/:id', boatHandlers.getBoat)
 router.get('/boats', boatHandlers.getBoats);
 router.delete('/boats/:id', boatHandlers.deleteBoat);
+
+//Set up the load routes
+router.post('/loads', loadHandlers.postLoad);
+router.get('/loads/:id', loadHandlers.getLoad)
+router.get('/loads', loadHandlers.getLoads);
+router.delete('/loads/:id', loadHandlers.deleteLoad);
 
 //Start up the server
 app.use(router);
