@@ -15,7 +15,8 @@ class BoatHandlers {
         let new_boat = {
             "name": req.body.name,
             "type": req.body.type,
-            "length": req.body.length
+            "length": req.body.length,
+            "loads": []
         };
 
         gCloudDatastore.saveDoc(new_boat, BOAT_DATASTORE_KEY).then((new_boat) => {
@@ -35,11 +36,25 @@ class BoatHandlers {
     }
 
     getBoats(req, res) {
-        gCloudDatastore.getDocs(BOAT_DATASTORE_KEY).then((boats) => {
-            boats = boats.map(
-                function(boat) { return generateSelf(boat, '/boats/' + boat.id); }
-            );
-            return res.status(200).json(boats);
+        gCloudDatastore.getDocsWithPagination(BOAT_DATASTORE_KEY, 3, req.query.endCursor).then((data) => {
+            const boats = data[0];
+            const pageInfo = data[1];
+
+            let retJSON = {
+                "boats": boats,
+                "info": {
+                    "moreResults": false,
+                    "nextPage": null
+                }
+            }
+
+            if (pageInfo.moreResults === true) {
+                retJSON.info.moreResults = true;
+                retJSON.info.nextPage = ROOT_URL + '/boats?endCursor=' + pageInfo.endCursor;
+            }
+
+            console.log(retJSON);
+            return res.status(200).json(retJSON);
         })
     }
 

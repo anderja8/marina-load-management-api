@@ -40,16 +40,44 @@ class GCloudDatastore {
     }
 
     //Pulls all documents in the datastore for the given key
-    getDocs(datastoreKey){
+    getDocs(datastoreKey) {
         const q = this.datastore.createQuery(datastoreKey);
         return this.datastore.runQuery(q).then( (entities) => {
             return entities[0].map(this.fromDatastore);
         });
     }
 
+    //Pulls all documents in the datastore for the given key. Uses pagination in combination with a max result size
+    async getDocsWithPagination(datastoreKey, pageSize, pageCursor) {
+        let q = this.datastore.createQuery(datastoreKey).limit(pageSize);
+
+        if (pageCursor) {
+            q = q.start(pageCursor);
+        }
+        const results = await datastore.runQuery(q);
+        const entities = results[0];
+        const info = results[1];
+
+        console.log(info);
+        console.log("no more results is: " + Datastore.NO_MORE_RESULTS);
+    
+        //There is glitch the datastore emulator where moreResults will never return
+        //NO_MORE_RESULTS. Adding a length check as a pseudo-work around for local testing
+        //https://github.com/googleapis/google-cloud-node/issues/2846
+        if (info.moreResults === Datastore.NO_MORE_RESULTS || entities.length < 3) {
+            //Make this resposne independent of datastore implementation
+            info.moreResults = false;
+        }
+        else {
+            info.moreResults = true;
+        }
+    
+        return [entities, info];
+    }
+
     //Tries to replace a doc with the given id from the datastore with the given key
     //Returns false if the docID is not in the datastore, or the doc if otherwise
-    replaceDoc(docID, newDoc, datastoreKey){
+    replaceDoc(docID, newDoc, datastoreKey) {
         //Check that the doc exists
         return this.getDoc(docID, datastoreKey).then( (doc) => {
             if (doc === false) {
