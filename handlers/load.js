@@ -58,11 +58,10 @@ class LoadHandlers {
         } catch (err) {
             res.status(500).send({'Error': 'failed to retrieve loads from the datastore: ' + err});
         }
-        console.log(data[0]);
 
         let loads;
         try {
-            let loads = await Promise.all(data[0].map(async function(load) {
+            loads = await Promise.all(data[0].map(async function(load) {
                 if (load.carrier) {
                     load = await _getCarrier(load);
                 }
@@ -98,11 +97,69 @@ class LoadHandlers {
     }
 
     async linkLoad(req, res) {
-        
+        let docs;
+        try {
+            docs = await Promise.all([
+                gCloudDatastore.getDoc(req.params.load_id, LOAD_DATASTORE_KEY),
+                gCloudDatastore.getDoc(req.params.boat_id, BOAT_DATASTORE_KEY)
+            ]);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to retrieve docs from the datastore: ' + err});
+        }
+        const load = docs[0];
+        const boat = docs[1];
+
+        if (load === false || boat === false) {
+            return res.status(404).send({'Error': 'The specified boat and/or load does not exist'});
+        } else if (load.carrier) {
+            return res.status(403).send({'Error': 'The load is already assigned to boat with id: ' + load.carrier});
+        }
+
+        const updatedLoad = {
+            "weight": load.weight,
+            "content": load.content,
+            "delivery_date": load.delivery_date,
+            "carrier": req.params.boat_id
+        };
+
+        try {
+            await gCloudDatastore.replaceDoc(req.params.load_id, updatedLoad, LOAD_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to update load in loads datastore: ' + err});
+        }
+        return res.status(204).send();
     }
 
     async unlinkLoad(req, res) {
+        let docs;
+        try {
+            docs = await Promise.all([
+                gCloudDatastore.getDoc(req.params.load_id, LOAD_DATASTORE_KEY),
+                gCloudDatastore.getDoc(req.params.boat_id, BOAT_DATASTORE_KEY)
+            ]);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to retrieve docs from the datastore: ' + err});
+        }
+        const load = docs[0];
+        const boat = docs[1];
 
+        if (load === false || boat === false || load.carrier !== req.params.boat_id) {
+            return res.status(404).send({'Error': 'No load with this load_id is assigned to a boat with this boat_id'});
+        }
+
+        const updatedLoad = {
+            "weight": load.weight,
+            "content": load.content,
+            "delivery_date": load.delivery_date,
+            "carrier": null
+        };
+
+        try {
+            await gCloudDatastore.replaceDoc(req.params.load_id, updatedLoad, LOAD_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to update load in loads datastore: ' + err});
+        }
+        return res.status(204).send();
     }
 }
 

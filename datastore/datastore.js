@@ -109,7 +109,7 @@ class GCloudDatastore {
             return false;
         }
 
-        const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
+        const key = this.datastore.key([datastoreKey, parseInt(docID, 10)]);
         try {
             await this.datastore.save({"key":key, "data":newDoc});
         } catch (err) {
@@ -150,20 +150,6 @@ class GCloudDatastore {
         }
 
         return entities[0].map(this.fromDatastore);
-    }
-
-    //Merges the datastore to the doc matching the provided datastore key and ID
-    async mergeDoc(datastoreKey, id, data) {
-        const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
-
-        try {
-            await this.datastore.save({"key":key, "data":data});
-        } catch (err) {
-            return err;
-        }
-
-        data.id = id;
-        return data;
     }
 }
 

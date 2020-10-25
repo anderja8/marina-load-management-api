@@ -38,8 +38,8 @@ router.get('/loads', loadHandlers.getLoads);
 router.delete('/loads/:id', loadHandlers.deleteLoad);
 
 //Set up the linking routes
-router.link('/loads/load_id/boats/boat_id', loadHandlers.linkLoad);
-router.unlink('/loads/load_id/boats/boat_id', loadHandlers.unlinkLoad);
+router.link('/loads/:load_id/boats/:boat_id', loadHandlers.linkLoad);
+router.unlink('/loads/:load_id/boats/:boat_id', loadHandlers.unlinkLoad);
 
 //Start up the server
 app.use(router);
