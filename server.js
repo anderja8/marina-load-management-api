@@ -11,7 +11,7 @@ const router = express.Router();
 app.use(bodyParser.json());
 app.set('port', 8080);
 
-ROOT_URL = 'anderja8-marina-load-manager.appspot.com';
+ROOT_URL = 'https://anderja8-marina-load-manager.appspot.com';
 BOAT_DATASTORE_KEY = "boats";
 BOAT_PAGINATION_SIZE = 3;
 LOAD_DATASTORE_KEY = "loads";
