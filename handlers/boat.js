@@ -16,28 +16,50 @@ class BoatHandlers {
             "length": req.body.length,
         };
 
-        let savedBoat = await gCloudDatastore.saveDoc(newBoat, BOAT_DATASTORE_KEY);
+        let savedBoat;
+        try {
+            savedBoat = await gCloudDatastore.saveDoc(newBoat, BOAT_DATASTORE_KEY);
+        } catch (err) {
+            return res.status(500).send({'Error': 'failed to save the new boat to the datastore: ' + err});
+        }
         savedBoat.loads = [];
         savedBoat = generateSelf(savedBoat, '/boats/' + savedBoat.id);
         return res.status(201).send(JSON.stringify(savedBoat));
     }
 
     async getBoat(req, res) {
-        let boat = await gCloudDatastore.getDoc(req.params.id, BOAT_DATASTORE_KEY);
+        let boat;
+        try {
+            boat = await gCloudDatastore.getDoc(req.params.id, BOAT_DATASTORE_KEY);
+        } catch (err) {
+            return res.status(500).send({'Error': 'failed to search for the boat in the datastore: ' + err});
+        }
         if (boat === false) {
             return res.status(404).send({'Error': 'No boat with this boat_id exists'});
         }
+
         boat = await _getLoads(boat);
         boat = generateSelf(boat, '/boats/' + boat.id);
         return res.status(200).json(boat);
     }
 
     async getBoats(req, res) {
-        const data = await gCloudDatastore.getDocsWithPagination(BOAT_DATASTORE_KEY, BOAT_PAGINATION_SIZE, req.query.endCursor);
-        let boats = await Promise.all(data[0].map(async function(boat) {
-            boat = await _getLoads(boat);
-            return generateSelf(boat, '/boats/' + boat.id);
-        }));
+        let data;
+        try {
+            data = await gCloudDatastore.getDocsWithPagination(BOAT_DATASTORE_KEY, BOAT_PAGINATION_SIZE, req.query.endCursor);
+        } catch (err) {
+            return res.status(500).send({'Error': 'failed to search boats in the datastore: ' + err});
+        }
+
+        let boats;
+        try {
+            boats = await Promise.all(data[0].map(async function(boat) {
+                boat = await _getLoads(boat);
+                return generateSelf(boat, '/boats/' + boat.id);
+            }));
+        } catch (err) {
+            return res.status(500).send({'Error': 'failed to map the loads of the boats: ' + err});
+        }
 
         const pageInfo = data[1];
 
@@ -52,20 +74,17 @@ class BoatHandlers {
         return res.status(200).json(retJSON);
     }
 
-    async deleteBoat(req, res) {
-        const response = await gCloudDatastore.deleteDoc(req.params.id, BOAT_DATASTORE_KEY);
-        if (response === false) {
-            return res.status(404).send({'Error': 'No boat with this boat_id exists'});
-        }
-        return res.status(204).send();
-    }
-
     //Deletes the boat with id = req.params.id. Fails if no boat with that id exists.
     //After deleting the boat, merges carrier of null into any loads where the carrier
     //matches the deleted boat id.
     async deleteBoat(req, res) {
         //Try to delete the boat
-        let response = await gCloudDatastore.deleteDoc(req.params.id, BOAT_DATASTORE_KEY);
+        let response;
+        try {
+            response = await gCloudDatastore.deleteDoc(req.params.id, BOAT_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to delete the boat from the datastore: ' + err});
+        }
         if (response === false) {
             return res.status(404).send({'Error': 'No boat with this boat_id exists'});
         }
@@ -74,14 +93,17 @@ class BoatHandlers {
         let updatePromises = [];
         let boat = {"id": req.params.id};
         boat = _getLoads(boat)
-        if (boat.loads) {
-            boat.loads.forEach((load) => {
-                const updatedData = ({"carrier": null});
-                updatePromises = promises.push(gCloudDatastore.mergeDoc(LOAD_DATASTORE_KEY, load.id, updatedData));
-            });
+        try {
+            if (boat.loads) {
+                boat.loads.forEach((load) => {
+                    const updatedData = ({"carrier": null});
+                    updatePromises = updatePromises.push(gCloudDatastore.mergeDoc(LOAD_DATASTORE_KEY, load.id, updatedData));
+                });
+            }
+            await Promise.all(updatePromises);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to update the loads for the delete boat, manual unlinking may be required: ' + err});
         }
-
-        await Promise.all(updatePromises);
         return res.status(204).send();
     }
 }
@@ -89,7 +111,12 @@ class BoatHandlers {
 //Adds an array of loads assigned to this boatID to the boat object passed
 async function _getLoads(boat) {
     boat.loads = [];
-    let loads = await gCloudDatastore.getDocsWithAttribute(LOAD_DATASTORE_KEY, "carrier", "=", boat.id);
+    let loads;
+    try {
+        loads = await gCloudDatastore.getDocsWithAttribute(LOAD_DATASTORE_KEY, "carrier", "=", boat.id);
+    } catch(err) {
+        return err;
+    }
     loads.forEach((load) => {
         newLoadEntry = {
             "id":doc.id,

@@ -24,13 +24,23 @@ class LoadHandlers {
             "carrier": null
         };
 
-        newLoad = await gCloudDatastore.saveDoc(newLoad, LOAD_DATASTORE_KEY);
-        newLoad = generateSelf(newLoad, '/loads/' + newLoad.id);
-        return res.status(201).send(JSON.stringify(newLoad));
+        let savedLoad;
+        try { 
+            savedLoad = await gCloudDatastore.saveDoc(newLoad, LOAD_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to save the load to the datastore: ' + err});
+        }
+        savedLoad = generateSelf(savedLoad, '/loads/' + savedLoad.id);
+        return res.status(201).send(JSON.stringify(savedLoad));
     }
 
     async getLoad(req, res) {
-        let load = await gCloudDatastore.getDoc(req.params.id, LOAD_DATASTORE_KEY);
+        let load;
+        try {
+            load = await gCloudDatastore.getDoc(req.params.id, LOAD_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to retrieve the load from the datastore: ' + err});
+        }
         if (load === false) {
             return res.status(404).send({'Error': 'No load with this load_id exists'});
         }
@@ -42,14 +52,25 @@ class LoadHandlers {
     }
 
     async getLoads(req, res) {
-        const data = await gCloudDatastore.getDocsWithPagination(LOAD_DATASTORE_KEY, LOAD_PAGINATION_SIZE, req.query.endCursor);
+        let data;
+        try {
+            data = await gCloudDatastore.getDocsWithPagination(LOAD_DATASTORE_KEY, LOAD_PAGINATION_SIZE, req.query.endCursor);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to retrieve loads from the datastore: ' + err});
+        }
         console.log(data[0]);
-        let loads = await Promise.all(data[0].map(async function(load) {
-            if (load.carrier) {
-                load = await _getCarrier(load);
-            }
-            return generateSelf(load, '/loads/' + load.id);
-        }));
+
+        let loads;
+        try {
+            let loads = await Promise.all(data[0].map(async function(load) {
+                if (load.carrier) {
+                    load = await _getCarrier(load);
+                }
+                return generateSelf(load, '/loads/' + load.id);
+            }));
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to map carriers for the loads: ' + err});
+        }
         const pageInfo = data[1];
         
         let retJSON = {
@@ -64,17 +85,35 @@ class LoadHandlers {
     }
 
     async deleteLoad(req, res) {
-        let response = await gCloudDatastore.deleteDoc(req.params.id, LOAD_DATASTORE_KEY);
+        let response;
+        try {
+            response = await gCloudDatastore.deleteDoc(req.params.id, LOAD_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to delete load from the datastore: ' + err});
+        }
         if (response === false) {
             return res.status(404).send({'Error': 'No load with this load_id exists'});
         }
         return res.status(204).send();
     }
+
+    async linkLoad(req, res) {
+        
+    }
+
+    async unlinkLoad(req, res) {
+
+    }
 }
 
 //Adds information on the carrier for the load to the passed load object
 async function _getCarrier(load) {
-    boat = await gCloudDatastore.getDoc(load.carrier, BOAT_DATASTORE_KEY);
+    let boat;
+    try {
+        boat = await gCloudDatastore.getDoc(load.carrier, BOAT_DATASTORE_KEY);
+    } catch (err) {
+        return err;
+    }
     carrierInfo = {
         "id": boat.id,
         "name": boat.name,

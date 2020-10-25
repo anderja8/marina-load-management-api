@@ -18,7 +18,13 @@ class GCloudDatastore {
     //Saves the supplied document to the datastore with the supplied key
     async saveDoc(document, datastoreKey) {
         const key = this.datastore.key(datastoreKey);
-        await this.datastore.save({"key":key, "data":document});
+
+        try {
+            await this.datastore.save({"key":key, "data":document});
+        } catch (err) {
+            return err;
+        }
+
         document.id = key.id;
         return document;
     }
@@ -27,7 +33,14 @@ class GCloudDatastore {
     //if no document is found, returns the document othewise.
     async getDoc(id, datastoreKey) {
         const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
-        const doc = await this.datastore.get(key);
+
+        let doc;
+        try {
+            doc = await this.datastore.get(key);
+        } catch (err) {
+            return err;
+        }
+
         if (doc[0] == undefined) {
             return false;
         }
@@ -40,7 +53,14 @@ class GCloudDatastore {
     //Pulls all documents in the datastore for the given key
     async getDocs(datastoreKey) {
         const q = this.datastore.createQuery(datastoreKey);
-        const entities = await this.datastore.runQuery(q);
+
+        let entities;
+        try {
+            entities = await this.datastore.runQuery(q);
+        } catch (err) {
+            return err;
+        }
+
         return entities[0].map(this.fromDatastore);
     }
 
@@ -51,14 +71,20 @@ class GCloudDatastore {
         if (pageCursor) {
             q = q.start(pageCursor);
         }
-        const results = await datastore.runQuery(q);
+
+        let results;
+        try {
+            results = await datastore.runQuery(q);
+        } catch (err) {
+            return err;
+        }
         const entities = results[0].map(this.fromDatastore);
         const info = results[1];
     
         //There is glitch the datastore emulator where moreResults will never return
         //NO_MORE_RESULTS. Adding a length check as a pseudo-work around for local testing
         //https://github.com/googleapis/google-cloud-node/issues/2846
-        if (info.moreResults === Datastore.NO_MORE_RESULTS || entities.length < 3) {
+        if (info.moreResults === Datastore.NO_MORE_RESULTS || entities.length < pageSize) {
             //Make this resposne independent of datastore implementation
             info.moreResults = false;
         }
@@ -73,13 +99,23 @@ class GCloudDatastore {
     //Returns false if the docID is not in the datastore, or the doc if otherwise
     async replaceDoc(docID, newDoc, datastoreKey) {
         //Check that the doc exists
-        const doc = await this.getDoc(docID, datastoreKey);
+        let doc;
+        try {
+            doc = await this.getDoc(docID, datastoreKey);
+        } catch (err) {
+            return err;
+        }
         if (doc === false) {
             return false;
         }
 
         const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
-        await this.datastore.save({"key":key, "data":newDoc});
+        try {
+            await this.datastore.save({"key":key, "data":newDoc});
+        } catch (err) {
+            return err;
+        }
+
         newDoc.id = docID;
         return newDoc;
     }
@@ -87,7 +123,13 @@ class GCloudDatastore {
     //Tries to delete a document with the given id from datastore with the given key
     //Returns the key if successful, false if the doc could not be found.
     async deleteDoc(id, datastoreKey) {
-        const doc = await this.getDoc(id, datastoreKey);
+        let doc;
+        try {
+            doc = await this.getDoc(id, datastoreKey);
+        } catch (err) {
+            return err;
+        }
+
         if (doc === false) {
             return false;
         }
@@ -99,14 +141,27 @@ class GCloudDatastore {
     //That evaluates to true when the comparator is applied to the attributeValue
     async getDocsWithAttribute(datastoreKey, attribute, comparator, attributeValue) {
         const q = this.datastore.createQuery(datastoreKey).filter(attribute, comparator, attributeValue);
-        const entities = await this.datastore.runQuery(q);
+
+        let entities;
+        try {
+            entities = await this.datastore.runQuery(q);
+        } catch (err) {
+            return err;
+        }
+
         return entities[0].map(this.fromDatastore);
     }
 
     //Merges the datastore to the doc matching the provided datastore key and ID
     async mergeDoc(datastoreKey, id, data) {
         const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
-        await this.datastore.save({"key":key, "data":data});
+
+        try {
+            await this.datastore.save({"key":key, "data":data});
+        } catch (err) {
+            return err;
+        }
+
         data.id = id;
         return data;
     }
