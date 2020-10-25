@@ -2,6 +2,7 @@ const {GCloudDatastore} = require('../datastore/datastore.js');
 gCloudDatastore = new GCloudDatastore();
 const { generateSelf } = require('./handlerFunctions.js');
 const moment = require('moment');
+const boat = require('./boat.js');
 
 class LoadHandlers {
 
@@ -29,17 +30,26 @@ class LoadHandlers {
     }
 
     async getLoad(req, res) {
-        let load = gCloudDatastore.getDoc(req.params.id, LOAD_DATASTORE_KEY);
+        let load = await gCloudDatastore.getDoc(req.params.id, LOAD_DATASTORE_KEY);
         if (load === false) {
             return res.status(404).send({'Error': 'No load with this load_id exists'});
+        }
+        if (load.carrier) {
+            load = _getCarrier(load);
         }
         load = generateSelf(load, '/loads/' + load.id);
         return res.status(200).json(load);
     }
 
     async getLoads(req, res) {
-        data = await gCloudDatastore.getDocsWithPagination(LOAD_DATASTORE_KEY, LOAD_PAGINATION_SIZE, req.query.endCursor);
-        let loads = data[0];
+        const data = await gCloudDatastore.getDocsWithPagination(LOAD_DATASTORE_KEY, LOAD_PAGINATION_SIZE, req.query.endCursor);
+        console.log(data[0]);
+        let loads = await Promise.all(data[0].map(async function(load) {
+            if (load.carrier) {
+                load = await _getCarrier(load);
+            }
+            return generateSelf(load, '/loads/' + load.id);
+        }));
         const pageInfo = data[1];
         
         let retJSON = {
@@ -54,32 +64,24 @@ class LoadHandlers {
     }
 
     async deleteLoad(req, res) {
-        let load = await gCloudDatastore.getDoc(req.params.id, LOAD_DATASTORE_KEY);
-        if (load === false) {
-            return res.status(404).send({'Error': 'No load with this load_id exists'});
-        }
-
-        if (load.carrier !== null) {
-            let boat = await gCloudDatastore.getDoc(req.params.id, BOAT_DATASTORE_KEY);
-            loadIndex = boat.loads.indexOf(req.params.id);
-            if (loadIndex >= 0) {
-                boat.loads.splice(loadIndex, 1);
-            }
-            let updatedBoat = {
-                "name": boat.name,
-                "type": boat.type,
-                "length": boat.length,
-                "loads": boat.loads
-            };
-            await gCloudDatastore.replaceDoc(boat.id, updatedBoat, BOAT_DATASTORE_KEY);
-        }
-
         let response = await gCloudDatastore.deleteDoc(req.params.id, LOAD_DATASTORE_KEY);
         if (response === false) {
             return res.status(404).send({'Error': 'No load with this load_id exists'});
         }
         return res.status(204).send();
     }
+}
+
+//Adds information on the carrier for the load to the passed load object
+async function _getCarrier(load) {
+    boat = await gCloudDatastore.getDoc(load.carrier, BOAT_DATASTORE_KEY);
+    carrierInfo = {
+        "id": boat.id,
+        "name": boat.name,
+        "self": ROOT_URL + '/boats/' + boat.id
+    }
+    load.carrier = carrierInfo;
+    return load;
 }
 
 module.exports = { LoadHandlers };

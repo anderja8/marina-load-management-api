@@ -36,10 +36,8 @@ class BoatHandlers {
         const data = await gCloudDatastore.getDocsWithPagination(BOAT_DATASTORE_KEY, BOAT_PAGINATION_SIZE, req.query.endCursor);
         let boats = await Promise.all(data[0].map(async function(boat) {
             boat = await _getLoads(boat);
-            return generateSelf(boat, '/boats/' + boat.id)
+            return generateSelf(boat, '/boats/' + boat.id);
         }));
-        
-        console.log(boats);
 
         const pageInfo = data[1];
 
@@ -61,17 +59,43 @@ class BoatHandlers {
         }
         return res.status(204).send();
     }
+
+    //Deletes the boat with id = req.params.id. Fails if no boat with that id exists.
+    //After deleting the boat, merges carrier of null into any loads where the carrier
+    //matches the deleted boat id.
+    async deleteBoat(req, res) {
+        //Try to delete the boat
+        let response = await gCloudDatastore.deleteDoc(req.params.id, BOAT_DATASTORE_KEY);
+        if (response === false) {
+            return res.status(404).send({'Error': 'No boat with this boat_id exists'});
+        }
+
+        //Asynchronously merge null carrier into all loads being carried by this boat
+        let updatePromises = [];
+        let boat = {"id": req.params.id};
+        boat = _getLoads(boat)
+        if (boat.loads) {
+            boat.loads.forEach((load) => {
+                const updatedData = ({"carrier": null});
+                updatePromises = promises.push(gCloudDatastore.mergeDoc(LOAD_DATASTORE_KEY, load.id, updatedData));
+            });
+        }
+
+        await Promise.all(updatePromises);
+        return res.status(204).send();
+    }
 }
 
+//Adds an array of loads assigned to this boatID to the boat object passed
 async function _getLoads(boat) {
     boat.loads = [];
-    let docs = await gCloudDatastore.getDocsWithAttribute(LOAD_DATASTORE_KEY, "carrier", "=", boat.id);
-    docs.forEach((doc) => {
-        new_load = {
+    let loads = await gCloudDatastore.getDocsWithAttribute(LOAD_DATASTORE_KEY, "carrier", "=", boat.id);
+    loads.forEach((load) => {
+        newLoadEntry = {
             "id":doc.id,
             "self": generateSelf(ROOT_URL, '/loads/' + doc.id)
         }
-        boat.loads.push(new_load);
+        boat.loads.push(newLoadEntry);
     });
     return boat;
 }

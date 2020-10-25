@@ -87,7 +87,6 @@ class GCloudDatastore {
     //Tries to delete a document with the given id from datastore with the given key
     //Returns the key if successful, false if the doc could not be found.
     async deleteDoc(id, datastoreKey) {
-        //Check that the boat exists
         const doc = await this.getDoc(id, datastoreKey);
         if (doc === false) {
             return false;
@@ -102,6 +101,14 @@ class GCloudDatastore {
         const q = this.datastore.createQuery(datastoreKey).filter(attribute, comparator, attributeValue);
         const entities = await this.datastore.runQuery(q);
         return entities[0].map(this.fromDatastore);
+    }
+
+    //Merges the datastore to the doc matching the provided datastore key and ID
+    async mergeDoc(datastoreKey, id, data) {
+        const key = this.datastore.key([datastoreKey, parseInt(id, 10)]);
+        await this.datastore.save({"key":key, "data":data});
+        data.id = id;
+        return data;
     }
 }
 
