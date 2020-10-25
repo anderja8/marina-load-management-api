@@ -12,6 +12,10 @@ app.use(bodyParser.json());
 app.set('port', 8080);
 
 ROOT_URL = 'anderja8-marina-load-manager.appspot.com';
+BOAT_DATASTORE_KEY = "boats";
+BOAT_PAGINATION_SIZE = 3;
+LOAD_DATASTORE_KEY = "loads";
+LOAD_PAGINATION_SIZE = 3;
 
 //Basic documentation, not required but I think it adds a lot
 router.get('/', function(req, res) {
