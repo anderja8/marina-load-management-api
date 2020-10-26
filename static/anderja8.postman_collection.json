@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "ff5f2a33-0e50-41a7-9ebc-5d9663ace2d5",
-		"name": "marina-load-management-pm-test-collection",
+		"name": "hw4_anderja8",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -2646,52 +2646,52 @@
 	],
 	"variable": [
 		{
-			"id": "6e668c51-51cf-4f3e-83bc-05782014441e",
+			"id": "055a8f5a-0866-496c-bc07-fdcbcd3f66f7",
 			"key": "boat_id",
 			"value": ""
 		},
 		{
-			"id": "4ecc8829-c296-4c31-92c1-b733b221ae53",
+			"id": "fa4613da-a8ff-4758-b924-87ac30fb6bea",
 			"key": "load_id",
 			"value": ""
 		},
 		{
-			"id": "61a73c67-9d53-452d-b971-0bbc0ac9608d",
+			"id": "154f3daf-caeb-4730-abd2-4dcac11cdd8d",
 			"key": "boat01_id",
 			"value": ""
 		},
 		{
-			"id": "f71ad54d-412e-4185-943b-4ffe9e1901d0",
+			"id": "e033f0d7-f871-4f3c-8148-aaddff41c462",
 			"key": "load01_id",
 			"value": ""
 		},
 		{
-			"id": "b8f91840-fbc6-4b97-a6c6-ffec0c04a2f6",
+			"id": "85ce9903-3530-4690-a32a-5c5c4acbd857",
 			"key": "load02_id",
 			"value": ""
 		},
 		{
-			"id": "215da8b0-a092-475b-a4a3-bb2b67b512e4",
+			"id": "962c7d20-b02c-4509-bda3-03b5598675af",
 			"key": "load03_id",
 			"value": ""
 		},
 		{
-			"id": "2849382a-4fe6-41e2-94fc-27179c99396c",
+			"id": "2cf74928-092d-42f0-bd15-c7a4edb34ea3",
 			"key": "load04_id",
 			"value": ""
 		},
 		{
-			"id": "8eccf87c-9784-4de0-a097-c224f0f157c1",
+			"id": "80011d6f-cd33-4665-bcb7-c1f206549b0b",
 			"key": "boat02_id",
 			"value": ""
 		},
 		{
-			"id": "f6a66c0f-47fb-4a73-a54e-5447e5f33b95",
+			"id": "44407d6e-82da-4f8d-9c80-87fb1b3bc3a2",
 			"key": "boat03_id",
 			"value": ""
 		},
 		{
-			"id": "b9b051e0-2b83-4e6d-a230-b266d389aacc",
+			"id": "c71483a9-af72-4946-bc06-77fa1731bba9",
 			"key": "boat04_id",
 			"value": ""
 		}

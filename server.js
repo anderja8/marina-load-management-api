@@ -22,13 +22,13 @@ router.get('/', function(req, res) {
     res.sendFile(__dirname + "/static/index.html");
 });
 router.get('/documentation', function(req, res) {
-    res.sendFile(__dirname + "/static/hw3-api-doc.pdf");
+    res.sendFile(__dirname + "/static/anderja8_load.pdf");
 });
 router.get('/pmcollection', function(req, res) {
-    res.sendFile(__dirname + "/static/marina-load-management.postman_collection.json");
+    res.sendFile(__dirname + "/static/anderja8.postman_collection.json");
 });
 router.get('/pmenvironment', function(req, res) {
-    res.sendFile(__dirname + "/static/marina-load-management.postman_environment.json");
+    res.sendFile(__dirname + "/static/anderja8.postman_environment.json");
 });
 
 //Set up the boat routes
