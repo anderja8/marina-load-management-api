@@ -83,7 +83,7 @@ class BoatHandlers {
         try {
             response = await gCloudDatastore.deleteDoc(req.params.id, BOAT_DATASTORE_KEY);
         } catch (err) {
-            res.status(500).send({'Error': 'failed to delete the boat from the datastore: ' + err});
+            return res.status(500).send({'Error': 'failed to delete the boat from the datastore: ' + err});
         }
         if (response === false) {
             return res.status(404).send({'Error': 'No boat with this boat_id exists'});
@@ -115,9 +115,29 @@ class BoatHandlers {
             }
             await Promise.all(updatePromises);
         } catch (err) {
-            res.status(500).send({'Error': 'failed to update the loads for the delete boat, manual unlinking may be required: ' + err});
+            return res.status(500).send({'Error': 'failed to update the loads for the delete boat, manual unlinking may be required: ' + err});
         }
         return res.status(204).send();
+    }
+
+    async getBoatLoads(req, res) {
+        let boat;
+        try {
+            boat = await gCloudDatastore.getDoc(req.params.id, BOAT_DATASTORE_KEY);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to search the datastore for the specified boat_id'});
+        }
+
+        if (boat === false) {
+            return res.status(400).send({'Error': 'No boat with this boat_id exists'});
+        }
+
+        try {
+            loads = await _getLoadsFullDetails(boat.id);
+        } catch (err) {
+            res.status(500).send({'Error': 'failed to search the datastore for loads with carrier = boat_id'});
+        }
+        return res.status(200).json(loads);
     }
 }
 
@@ -138,6 +158,21 @@ async function _getLoads(boat) {
         boat.loads.push(newLoadEntry);
     });
     return boat;
+}
+
+//I misread the assignment and had to tack this hacky function on to return an array with full load details for all loads
+//being carried by a certain boat_id
+async function _getLoadsFullDetails(boat_id) {
+    let loads;
+    try {
+        loads = await gCloudDatastore.getDocsWithAttribute(LOAD_DATASTORE_KEY, "carrier", "=", boat.id);
+    } catch(err) {
+        return err;
+    }
+    loads.forEach((load) => {
+        load.self = generateSelf(ROOT_URL, '/loads/' + load.id)
+    })
+    return loads;
 }
 
 module.exports = { BoatHandlers };

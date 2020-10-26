@@ -30,6 +30,7 @@ router.post('/boats', boatHandlers.postBoat);
 router.get('/boats/:id', boatHandlers.getBoat)
 router.get('/boats', boatHandlers.getBoats);
 router.delete('/boats/:id', boatHandlers.deleteBoat);
+router.get('/boats/:id/loads', boatHandlers.getBoatLoads);
 
 //Set up the load routes
 router.post('/loads', loadHandlers.postLoad);
