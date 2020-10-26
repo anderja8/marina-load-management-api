@@ -24,6 +24,12 @@ router.get('/', function(req, res) {
 router.get('/documentation', function(req, res) {
     res.sendFile(__dirname + "/static/hw3-api-doc.pdf");
 });
+router.get('/pmcollection', function(req, res) {
+    res.sendFile(__dirname + "/static/marina-load-management.postman_collection.json");
+});
+router.get('/pmenvironment', function(req, res) {
+    res.sendFile(__dirname + "/static/marina-load-management.postman_environment.json");
+});
 
 //Set up the boat routes
 router.post('/boats', boatHandlers.postBoat);
