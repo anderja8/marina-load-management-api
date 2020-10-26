@@ -45,7 +45,7 @@ class LoadHandlers {
             return res.status(404).send({'Error': 'No load with this load_id exists'});
         }
         if (load.carrier) {
-            load = _getCarrier(load);
+            load = await _getCarrier(load);
         }
         load = generateSelf(load, '/loads/' + load.id);
         return res.status(200).json(load);

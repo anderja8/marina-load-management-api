@@ -129,14 +129,16 @@ class BoatHandlers {
         }
 
         if (boat === false) {
-            return res.status(400).send({'Error': 'No boat with this boat_id exists'});
+            return res.status(404).send({'Error': 'No boat with this boat_id exists'});
         }
 
+        let loads;
         try {
-            loads = await _getLoadsFullDetails(boat.id);
+            loads = await _getLoadsFullDetails(boat);
         } catch (err) {
             res.status(500).send({'Error': 'failed to search the datastore for loads with carrier = boat_id'});
         }
+
         return res.status(200).json(loads);
     }
 }
@@ -153,7 +155,7 @@ async function _getLoads(boat) {
     loads.forEach((load) => {
         newLoadEntry = {
             "id":load.id,
-            "self": generateSelf(ROOT_URL, '/loads/' + load.id)
+            "self": generateSelf(ROOT_URL + '/loads/' + load.id)
         }
         boat.loads.push(newLoadEntry);
     });
@@ -162,15 +164,21 @@ async function _getLoads(boat) {
 
 //I misread the assignment and had to tack this hacky function on to return an array with full load details for all loads
 //being carried by a certain boat_id
-async function _getLoadsFullDetails(boat_id) {
+async function _getLoadsFullDetails(boat) {
     let loads;
     try {
         loads = await gCloudDatastore.getDocsWithAttribute(LOAD_DATASTORE_KEY, "carrier", "=", boat.id);
     } catch(err) {
         return err;
     }
+
     loads.forEach((load) => {
-        load.self = generateSelf(ROOT_URL, '/loads/' + load.id)
+        load.carrier = {
+            "id": boat.id,
+            "name": boat.name,
+            "self": generateSelf(ROOT_URL + '/boats/' + boat.id)
+        };
+        load.self = generateSelf(ROOT_URL + '/loads/' + load.id);
     })
     return loads;
 }
